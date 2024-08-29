@@ -44,7 +44,7 @@ pip install -r requirements.txt
 │   ├── network.py                <--- A vector field prediction network
 │   └── fm.py                     <--- (TODO) Implement Flow Matching
 │
-└── image_fm_todo (Task 1)
+└── image_fm_todo (Task 2)
     ├── dataset.py                <--- Ready-to-use AFHQ dataset code
     ├── fm.py                     <--- (TODO) Implement Flow Matching
     ├── module.py                 <--- Basic modules of a vector field prediction network

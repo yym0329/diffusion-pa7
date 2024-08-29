@@ -123,6 +123,9 @@ As similar to previous Assignments 1 and 2, we will first implement Flow Matchin
 ### TODO
 In this assignment, you will implement all key functions of flow matching for training and sampling.
 
+#### 1-0: Copy the previous completed implementations
+You can copy the `2d_plot_ddpm_todo/network.py` and `image_ddpm_todo/network.py` that you've already implemented in Assignments 1 and 2.
+
 #### 1-1: Implement Flow Matching Scheduler
 complete the functions `compute_psi_t()` and `step()` of `FMScheduler` class in `fm.py`.
 The `step()` function is a one step of ODESolver from $t=0$ to $t=1$. Although more sophisticated numerical method can be used, you just need to implement the simplest one, first-order Euler method. 

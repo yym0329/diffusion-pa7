@@ -176,7 +176,7 @@ After finishing the implementation for the CFG setup, train FM with the CFG setu
 It will sample images and save a checkpoint every `args.log_interval`. After training a model, sample and save images by
 
 ```
-python samplingpy --ckpt_path ${CKPT_PATH} --save_dir ${SAVE_DIR_PATH}
+python sampling.py --ckpt_path ${CKPT_PATH} --save_dir ${SAVE_DIR_PATH}
 ```
 
 We recommend starting the training as soon as possible as the training would take 14 hours.
@@ -184,9 +184,10 @@ We recommend starting the training as soon as possible as the training would tak
 As done in Assignments 1 and 2, measure FID score using the pre-trained classifier network provided previously.
 
 ```
+python dataset.py
 python fid/measure_fid.py $GT_IMG_DIR $GEN_IMG_DIR
 ```
-Use the validation set of the AFHQ dataset (e.g., `data/afhq/eval`) as @GT_IMG_DIR. 
+Use the evaluation set of the AFHQ dataset, `data/afhq/eval`, not `data/afhq/val` as @GT_IMG_DIR. 
 
 Take a screenshot of a FID and include at least 8 sampled images.
 

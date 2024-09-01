@@ -4,7 +4,7 @@
   </h1>
   <p>
     <a href=https://mhsung.github.io/kaist-cs492d-fall-2024/ target="_blank"><b>KAIST CS492(D): Diffusion Models and Their Applications (Fall 2024)</b></a><br>
-    Programming Assignment 6
+    Programming Assignment 7
   </p>
 </div> 
 
@@ -19,9 +19,6 @@
    <img src="./assets/trajectory_visualization.png">
 </div>
 
-  
-#### Due: TBD e.g., Mar 21 (Mon) 23:59 KST </b>
-#### Where to Submit: GradeScope
 
 ## Abstract
 

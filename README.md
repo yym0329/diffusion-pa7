@@ -41,7 +41,7 @@ pip install -r requirements.txt
 ## Code Structure
 ```
 .
-├── 2d_plot_diffusion_todo    (Task 1)
+├── 2d_plot_fm_todo    (Task 1)
 │   ├── fm_tutorial.ipynb         <--- Main code
 │   ├── dataset.py                <--- Define dataset (Swiss-roll, moon, gaussians, etc.)
 │   ├── network.py                <--- A vector field prediction network

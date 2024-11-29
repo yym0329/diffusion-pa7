@@ -36,7 +36,7 @@ def main(args):
                 guidance_scale=args.cfg_scale,
             )
         else:
-            samples = fm.sample(B, num_inference_timesteps=20)
+            raise NotImplementedError("In Assignment 7, we sample images with CFG setup only.")
 
         pil_images = tensor_to_pil_image(samples)
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--ckpt_path", type=str)
     parser.add_argument("--save_dir", type=str)
-    parser.add_argument("--use_cfg", type=bool, default=False)
+    parser.add_argument("--use_cfg", action="store_true")
     parser.add_argument("--cfg_scale", type=float, default=7.5)
 
     args = parser.parse_args()

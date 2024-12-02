@@ -182,7 +182,7 @@ After finishing the implementation for the CFG setup, train FM with the CFG setu
 It will sample images and save a checkpoint every `args.log_interval`. After training a model, sample and save images by
 
 ```
-python sampling.py --ckpt_path ${CKPT_PATH} --save_dir ${SAVE_DIR_PATH}
+python sampling.py --use_cfg --ckpt_path ${CKPT_PATH} --save_dir ${SAVE_DIR_PATH}
 ```
 
 We recommend starting the training as soon as possible as the training would take 14 hours.
@@ -239,7 +239,7 @@ Otherwise, you will receive up to 20 points from this assignment that count towa
   - 5 points: Achieve greater, or equal to 40 and less than 60.
   - 0 point: otherwise.
 - Task 2
-  - 10 points: Achieve FID between **30** with CFG=7.5.
+  - 10 points: Achieve FID lower than **30** with CFG=7.5.
   - 5 points: Achieve FID between **30** and **50** with CFG=7.5.
   - 0 point: otherwise.
 

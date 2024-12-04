@@ -1,5 +1,6 @@
 import os
 from itertools import chain
+from multiprocessing import Pool
 from pathlib import Path
 
 import torch
@@ -49,7 +50,12 @@ def get_data_iterator(iterable):
 
 class AFHQDataset(torch.utils.data.Dataset):
     def __init__(
-        self, root: str, split: str, transform=None, max_num_images_per_cat=-1, label_offset=1
+        self,
+        root: str,
+        split: str,
+        transform=None,
+        max_num_images_per_cat=-1,
+        label_offset=1,
     ):
         super().__init__()
         self.root = root
@@ -69,7 +75,9 @@ class AFHQDataset(torch.utils.data.Dataset):
             if self.max_num_images_per_cat > 0:
                 cat_fnames = cat_fnames[: self.max_num_images_per_cat]
             fnames += cat_fnames
-            labels += [idx + label_offset] * len(cat_fnames)  # label 0 is for null class.
+            labels += [idx + label_offset] * len(
+                cat_fnames
+            )  # label 0 is for null class.
 
         self.fnames = fnames
         self.labels = labels
@@ -96,7 +104,7 @@ class AFHQDataModule(object):
         max_num_images_per_cat: int = 1000,
         image_resolution: int = 64,
         label_offset=1,
-        transform=None
+        transform=None,
     ):
         self.root = root
         self.batch_size = batch_size
@@ -127,7 +135,7 @@ class AFHQDataModule(object):
             "train",
             self.transform,
             max_num_images_per_cat=self.max_num_images_per_cat,
-            label_offset=self.label_offset
+            label_offset=self.label_offset,
         )
         self.val_ds = AFHQDataset(
             self.afhq_root,
@@ -164,3 +172,24 @@ class AFHQDataModule(object):
             shuffle=False,
             drop_last=False,
         )
+
+
+if __name__ == "__main__":
+    data_module = AFHQDataModule("data", 32, 4, -1, 64, 1)
+
+    eval_dir = Path(data_module.afhq_root) / "eval"
+    eval_dir.mkdir(exist_ok=True)
+
+    def func(path):
+        fn = path.name
+        cmd = f"cp {path} {eval_dir / fn}"
+        os.system(cmd)
+        img = Image.open(str(eval_dir / fn))
+        img = img.resize((64, 64))
+        img.save(str(eval_dir / fn))
+        print(fn)
+
+    with Pool(8) as pool:
+        pool.map(func, data_module.val_ds.fnames)
+
+    print(f"Constructed eval dir at {eval_dir}")

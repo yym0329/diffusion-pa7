@@ -9,10 +9,22 @@ from torch.nn import init
 
 
 class UNet(nn.Module):
-    def __init__(self, T=1000, image_resolution=64, ch=128, ch_mult=[1,2,2,2], attn=[1], num_res_blocks=4, dropout=0.1, use_cfg=False, cfg_dropout=0.1, num_classes=None):
+    def __init__(
+        self,
+        T=1000,
+        image_resolution=64,
+        ch=128,
+        ch_mult=[1, 2, 2, 2],
+        attn=[1],
+        num_res_blocks=4,
+        dropout=0.1,
+        use_cfg=False,
+        cfg_dropout=0.1,
+        num_classes=None,
+    ):
         super().__init__()
         self.image_resolution = image_resolution
-        assert all([i < len(ch_mult) for i in attn]), 'attn index out of bound'
+        assert all([i < len(ch_mult) for i in attn]), "attn index out of bound"
         tdim = ch * 4
         # self.time_embedding = TimeEmbedding(T, ch, tdim)
         self.time_embedding = TimeEmbedding(tdim)
@@ -23,7 +35,7 @@ class UNet(nn.Module):
         if use_cfg:
             assert num_classes is not None
             cdim = tdim
-            self.class_embedding = nn.Embedding(num_classes+1, cdim)
+            self.class_embedding = nn.Embedding(num_classes + 1, cdim)
 
         self.head = nn.Conv2d(3, ch, kernel_size=3, stride=1, padding=1)
         self.downblocks = nn.ModuleList()
@@ -32,27 +44,41 @@ class UNet(nn.Module):
         for i, mult in enumerate(ch_mult):
             out_ch = ch * mult
             for _ in range(num_res_blocks):
-                self.downblocks.append(ResBlock(
-                    in_ch=now_ch, out_ch=out_ch, tdim=tdim,
-                    dropout=dropout, attn=(i in attn)))
+                self.downblocks.append(
+                    ResBlock(
+                        in_ch=now_ch,
+                        out_ch=out_ch,
+                        tdim=tdim,
+                        dropout=dropout,
+                        attn=(i in attn),
+                    )
+                )
                 now_ch = out_ch
                 chs.append(now_ch)
             if i != len(ch_mult) - 1:
                 self.downblocks.append(DownSample(now_ch))
                 chs.append(now_ch)
 
-        self.middleblocks = nn.ModuleList([
-            ResBlock(now_ch, now_ch, tdim, dropout, attn=True),
-            ResBlock(now_ch, now_ch, tdim, dropout, attn=False),
-        ])
+        self.middleblocks = nn.ModuleList(
+            [
+                ResBlock(now_ch, now_ch, tdim, dropout, attn=True),
+                ResBlock(now_ch, now_ch, tdim, dropout, attn=False),
+            ]
+        )
 
         self.upblocks = nn.ModuleList()
         for i, mult in reversed(list(enumerate(ch_mult))):
             out_ch = ch * mult
             for _ in range(num_res_blocks + 1):
-                self.upblocks.append(ResBlock(
-                    in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
-                    dropout=dropout, attn=(i in attn)))
+                self.upblocks.append(
+                    ResBlock(
+                        in_ch=chs.pop() + now_ch,
+                        out_ch=out_ch,
+                        tdim=tdim,
+                        dropout=dropout,
+                        attn=(i in attn),
+                    )
+                )
                 now_ch = out_ch
             if i != 0:
                 self.upblocks.append(UpSample(now_ch))
@@ -61,7 +87,7 @@ class UNet(nn.Module):
         self.tail = nn.Sequential(
             nn.GroupNorm(32, now_ch),
             Swish(),
-            nn.Conv2d(now_ch, 3, 3, stride=1, padding=1)
+            nn.Conv2d(now_ch, 3, 3, stride=1, padding=1),
         )
         self.initialize()
 
@@ -77,18 +103,27 @@ class UNet(nn.Module):
 
         if self.use_cfg and class_label is not None:
             if self.training:
-                assert not torch.any(class_label == 0) # 0 for null.
-                
+                assert not torch.any(class_label == 0)  # 0 for null.
+
                 ######## TODO ########
                 # DO NOT change the code outside this part.
-                # Assignment 2. Implement random null conditioning in CFG training.
-                raise NotImplementedError("TODO")
+                # Assignment 2-2. Implement random null conditioning in CFG training.
+                zero_mask = torch.rand_like(class_label.float()) < self.cfg_dropout
+                class_label = torch.where(
+                    zero_mask, torch.zeros_like(class_label), class_label
+                ).to(x.device)
                 #######################
-            
+
             ######## TODO ########
             # DO NOT change the code outside this part.
-            # Assignment 2. Implement class conditioning
-            raise NotImplementedError("TODO")
+            # Assignment 2-1. Implement class conditioning
+            class_label = class_label.to(x.device)
+            c_emb = self.class_embedding(class_label)
+
+            if temb.shape[0] == 1:  # deal with test time shape mismatch
+                batch_size = c_emb.shape[0]
+                temb = temb.repeat(batch_size, 1)
+            temb = c_emb + temb
             #######################
 
         # Downsampling

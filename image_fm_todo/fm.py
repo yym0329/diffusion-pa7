@@ -47,7 +47,7 @@ class FMScheduler(nn.Module):
         # DO NOT change the code outside this part.
         # compute psi_t(x)
 
-        psi_t = x1
+        psi_t = (1 - (1 - self.sigma_min) * t) * x + t * x1
         ######################
 
         return psi_t
@@ -61,7 +61,7 @@ class FMScheduler(nn.Module):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # implement each step of the first-order Euler method.
-        x_next = xt
+        x_next = xt + dt * vt
         ######################
 
         return x_next
@@ -93,12 +93,13 @@ class FlowMatching(nn.Module):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # Implement the CFM objective.
+        psi_t = self.fm_scheduler.compute_psi_t(x1, t, x0)
         if class_label is not None:
-            model_out = self.network(x1, t, class_label=class_label)
+            model_out = self.network(psi_t, t, class_label=class_label)
         else:
-            model_out = self.network(x1, t)
-
-        loss = x1.mean()
+            model_out = self.network(psi_t, t)
+        linear_flow = x1 - (1 - self.fm_scheduler.sigma_min) * x0
+        loss = F.mse_loss(model_out, linear_flow)
         ######################
 
         return loss
@@ -138,12 +139,23 @@ class FlowMatching(nn.Module):
         xt = x_T
         for i, t in enumerate(pbar):
             t_next = timesteps[i + 1] if i < len(timesteps) - 1 else torch.ones_like(t)
-            
 
             ######## TODO ########
             # Complete the sampling loop
+            if class_label is not None and (guidance_scale != 0.0):
+                null_class_label = torch.zeros_like(class_label)
+                class_input = torch.cat([null_class_label, class_label], dim=0)
+                xt_input = torch.cat([xt, xt], dim=0)
+                t_input = torch.cat([t, t], dim=0)
+                vt = self.network(xt_input, t_input, class_label=class_input)
+                class_vt = vt[batch_size:]
+                null_vt = vt[:batch_size]
+                vt = (1 - guidance_scale) * null_vt + guidance_scale * class_vt
+            else:
+                vt = self.network(xt, t)
+            dt = (t_next - t).reshape(-1, 1, 1, 1)
 
-            xt = self.fm_scheduler.step(xt, torch.zeros_like(xt), torch.zeros_like(t))
+            xt = self.fm_scheduler.step(xt, vt, dt)
 
             ######################
 

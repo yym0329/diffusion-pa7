@@ -83,9 +83,22 @@ class SimpleNet(nn.Module):
 
         ######## TODO ########
         # DO NOT change the code outside this part.
+        self.dim_in = dim_in
+        self.dim_out = dim_out
+        self.dim_hids = dim_hids
+        self.num_timesteps = num_timesteps
+
+        self.nonlinear = nn.ReLU()
+        self.layers = nn.ModuleList()
+        for i, dim_hid in enumerate(dim_hids):
+            if i == 0:
+                self.layers.append(TimeLinear(dim_in, dim_hid, num_timesteps))
+            else:
+                self.layers.append(TimeLinear(dim_hids[i - 1], dim_hid, num_timesteps))
+        self.layers.append(TimeLinear(dim_hids[-1], dim_out, num_timesteps))
 
         ######################
-        
+
     def forward(self, x: torch.Tensor, t: torch.Tensor):
         """
         (TODO) Implement the forward pass. This should output
@@ -97,6 +110,9 @@ class SimpleNet(nn.Module):
         """
         ######## TODO ########
         # DO NOT change the code outside this part.
-
+        for layer in self.layers[:-1]:
+            x = layer(x, t)
+            x = self.nonlinear(x)
+        x = self.layers[-1](x, t)
         ######################
         return x
